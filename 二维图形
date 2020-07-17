@@ -1,0 +1,20 @@
+#include <GL/glut.h>
+
+void myDisplay(void)//画矩形
+{
+glClear(GL_COLOR_BUFFER_BIT);
+glRectf(-0.7f, -0.5f, 0.7f, 0.5f);//坐标位置
+glFlush();//确保代码执行
+}
+
+int main(int argc, char *argv[])
+{
+glutInit(&argc, argv);
+glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);//设置显示方式
+glutInitWindowPosition(100, 100);//窗口位置
+glutInitWindowSize(400, 400);//窗口大小
+glutCreateWindow("第一个OpenGL程序");//创建窗口
+glutDisplayFunc(&myDisplay);//调用函数绘图
+glutMainLoop();
+return 0;
+}
