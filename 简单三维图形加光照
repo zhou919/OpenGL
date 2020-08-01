@@ -1,0 +1,273 @@
+#include <gl/glut.h>
+#include<iostream>
+#include<math.h>
+float angle=0;
+void init(void) 
+{
+	glClearColor(1.0, 1.0, 0.0, 0.0);//设置背景颜色
+	glShadeModel(GL_SMOOTH);//设置明暗处理,有两种选择模式：GL_FLAT（不渐变）和GL_SMOOTH（渐变过渡）
+	GLfloat light_ambient[] = {0.0,0.0,1.0,1.0};
+	GLfloat light_diffuse[]	= {1.0,1.0,1.0,1.0};
+	GLfloat light_specular[]= {1.0,0.0,1.0,0.0};
+	GLfloat light_position[]= {0.0,0.0,1.0,0.0};
+
+	glLightfv(GL_LIGHT0,GL_AMBIENT,light_ambient);
+	glLightfv(GL_LIGHT0,GL_DIFFUSE,light_diffuse);
+	glLightfv(GL_LIGHT0,GL_SPECULAR,light_specular);
+	glLightfv(GL_LIGHT0,GL_POSITION,light_position);
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+}
+void CalculateNormal(GLdouble *dVertex1, 
+			GLdouble *dVertex2, GLdouble *dVertex3, 
+			GLdouble *dNormal)
+{
+	GLdouble dVector1[3],dVector2[3];
+	dVector1[0]=dVertex2[0]-dVertex1[0];
+	dVector1[1]=dVertex2[1]-dVertex1[1];
+	dVector1[2]=dVertex2[2]-dVertex1[2];
+	dVector2[0]=dVertex3[0]-dVertex1[0];
+	dVector2[1]=dVertex3[1]-dVertex1[1];
+	dVector2[2]=dVertex3[2]-dVertex1[2];
+
+	dNormal[0]=dVector1[1]*dVector2[2]-dVector1[2]*dVector2[1];
+	dNormal[1]=dVector1[2]*dVector2[0]-dVector1[0]*dVector2[2];
+	dNormal[2]=dVector1[0]*dVector2[1]-dVector1[1]*dVector2[0];
+
+	double dNormalLength=sqrt(dNormal[0]*dNormal[0]
+			+dNormal[1]*dNormal[1]+dNormal[2]*dNormal[2]);
+	if(dNormalLength!=0.0)
+	{
+		dNormal[0]=dNormal[0]/dNormalLength;
+		dNormal[1]=dNormal[1]/dNormalLength;
+		dNormal[2]=dNormal[2]/dNormalLength;
+	}
+	else
+	{
+		dNormal[0]=0.0;
+		dNormal[1]=0.0;
+		dNormal[2]=1.0;
+	}
+
+}
+void display(void)
+{
+	double dPoint1[3],dPoint2[3],dPoint3[3];
+	double dNormal[3];
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  //清空颜色缓冲区
+	glLoadIdentity();   //清空矩阵
+	glEnable(GL_DEPTH_TEST);
+	glRotatef(45,1,0,0);
+	glRotatef(angle,0,1,0);
+	glColor3f(0.0,0.0,1.0);
+	glScaled(0.3,0.3,0.3);
+
+	glColorMaterial(GL_FRONT,GL_DIFFUSE);
+	glEnable(GL_COLOR_MATERIAL);
+	
+	//三棱锥
+	glColor3f(0.0,1.0,0.0);
+	glViewport(0,0,200,200);
+
+	dPoint1[0]=0;	 dPoint1[1]=1;  dPoint1[2]=0;
+	dPoint2[0]=1;	 dPoint2[1]=-1; dPoint2[2]=-1;
+	dPoint3[0]=-1;	 dPoint3[1]=-1; dPoint3[2]=-1;
+	CalculateNormal(dPoint1,dPoint2,dPoint3,dNormal);
+	glBegin(GL_TRIANGLES);
+	glNormal3dv(dNormal);
+	glVertex3f(0,1,0);
+	glVertex3f(1,-1,-1);
+	glVertex3f(-1,-1,-1);
+
+	dPoint1[0]=0;	 dPoint1[1]=1;  dPoint1[2]=0;
+	dPoint2[0]=1;	 dPoint2[1]=-1; dPoint2[2]=1;
+	dPoint3[0]=1;	 dPoint3[1]=-1; dPoint3[2]=-1;
+	CalculateNormal(dPoint1,dPoint2,dPoint3,dNormal);
+	glNormal3dv(dNormal);
+    glVertex3f(0,1,0);
+    glVertex3f(1,-1,1);
+    glVertex3f(1,-1,-1);
+ 
+	dPoint1[0]=0;	 dPoint1[1]=1;  dPoint1[2]=0;
+	dPoint2[0]=-1;	 dPoint2[1]=-1; dPoint2[2]=1;
+	dPoint3[0]=1;	 dPoint3[1]=-1; dPoint3[2]=1;
+	CalculateNormal(dPoint1,dPoint2,dPoint3,dNormal);
+	glNormal3dv(dNormal);
+    glVertex3f(0,1,0);
+	glVertex3f(-1,-1,1);
+	glVertex3f(1,-1,1);
+	
+	dPoint1[0]=0;	 dPoint1[1]=1;  dPoint1[2]=0;
+	dPoint2[0]=-1;	 dPoint2[1]=-1; dPoint2[2]=-1;
+	dPoint3[0]=-1;	 dPoint3[1]=-1; dPoint3[2]=1;
+	CalculateNormal(dPoint1,dPoint2,dPoint3,dNormal);
+	glNormal3dv(dNormal);
+	glVertex3f(0,1,0);
+	glVertex3f(-1,-1,-1);
+	glVertex3f(-1,-1,1);
+    glEnd();
+
+	dPoint1[0]=-1;	 dPoint1[1]=-1;  dPoint1[2]=-1;
+	dPoint2[0]=1;	 dPoint2[1]=-1; dPoint2[2]=-1;
+	dPoint3[0]=1;	 dPoint3[1]=-1; dPoint3[2]=1;
+	CalculateNormal(dPoint1,dPoint2,dPoint3,dNormal);
+    glBegin(GL_QUADS);
+	glNormal3dv(dNormal);
+	glVertex3f(-1,-1,-1);
+	glVertex3f(1,-1,-1);
+	glVertex3f(1,-1,1);
+	glVertex3f(-1,-1,1);
+    glEnd();
+
+	//正方体
+	glColor3f(1.0,0.0,1.0);
+	glViewport(200,200,200,200);
+	glBegin(GL_QUADS);
+	glNormal3f(0,1,0);
+    glVertex3f(1,1,-1);
+	glVertex3f(-1,1,-1);
+	glVertex3f(-1,1,1);
+	glVertex3f(1,1,1);
+	glEnd();
+
+	glBegin(GL_QUADS);
+	glNormal3f(0,0,1);
+	glVertex3f(-1,1,1);
+	glVertex3f(-1,-1,1);
+	glVertex3f(1,-1,1);
+	glVertex3f(1,1,1);
+	glEnd();
+
+	glBegin(GL_QUADS);
+	glNormal3f(1,0,0);
+	glVertex3f(1,1,-1);
+	glVertex3f(1,1,1);
+	glVertex3f(1,-1,1);
+	glVertex3f(1,-1,-1);
+	glEnd();
+
+    glBegin(GL_QUADS);
+	glNormal3f(0,-1,0);
+	glVertex3f(1,-1,1);
+	glVertex3f(-1,-1,1);
+	glVertex3f(-1,-1,-1);
+	glVertex3f(1,-1,-1);
+	glEnd();
+
+	glBegin(GL_QUADS);
+	glNormal3f(0,0,-1);
+	glVertex3f(1,1,-1);
+	glVertex3f(1,-1,-1);
+	glVertex3f(-1,-1,-1);
+	glVertex3f(-1,1,-1);
+	glEnd();
+	
+	glBegin(GL_QUADS);
+	glNormal3f(-1,0,0);
+	glVertex3f(-1,1,1);
+	glVertex3f(-1,1,-1);
+	glVertex3f(-1,-1,-1);
+	glVertex3f(-1,-1,1);	
+	glEnd();
+
+	//三棱柱
+	glColor3f(1.0,0.0,0.0);
+	glViewport(0,200,200,200);
+	dPoint1[0]=-1;	 dPoint1[1]=1;  dPoint1[2]=-1;
+	dPoint2[0]=-1;	 dPoint2[1]=1; dPoint2[2]=1;
+	dPoint3[0]=1;	 dPoint3[1]=1; dPoint3[2]=-1;
+	CalculateNormal(dPoint1,dPoint2,dPoint3,dNormal);
+	glBegin(GL_TRIANGLES);
+	glNormal3dv(dNormal);
+    glVertex3f(-1,1,-1);
+	glVertex3f(-1,1,1);	
+	glVertex3f(1,1,-1);
+	glEnd();
+
+	dPoint1[0]=-1;	 dPoint1[1]=1;  dPoint1[2]=1;
+	dPoint2[0]=-1;	 dPoint2[1]=-1; dPoint2[2]=1;
+	dPoint3[0]=1;	 dPoint3[1]=-1; dPoint3[2]=-1;
+	CalculateNormal(dPoint1,dPoint2,dPoint3,dNormal);
+	glBegin(GL_QUADS);
+	glNormal3dv(dNormal);
+	glVertex3f(-1,1,1);
+	glVertex3f(-1,-1,1);
+	glVertex3f(1,-1,-1);
+	glVertex3f(1,1,-1);
+	glEnd();
+
+	dPoint1[0]=1;	 dPoint1[1]=1;  dPoint1[2]=-1;
+	dPoint2[0]=1;	 dPoint2[1]=-1; dPoint2[2]=-1;
+	dPoint3[0]=-1;	 dPoint3[1]=-1; dPoint3[2]=-1;
+	CalculateNormal(dPoint1,dPoint2,dPoint3,dNormal);
+	glBegin(GL_QUADS);
+	glNormal3dv(dNormal);
+	glVertex3f(1,1,-1);
+	glVertex3f(1,-1,-1);
+	glVertex3f(-1,-1,-1);
+	glVertex3f(-1,1,-1);
+	glEnd();
+
+	dPoint1[0]=-1;	 dPoint1[1]=-1;  dPoint1[2]=-1;
+	dPoint2[0]=1;	 dPoint2[1]=-1; dPoint2[2]=-1;
+	dPoint3[0]=-1;	 dPoint3[1]=-1; dPoint3[2]=1;
+	CalculateNormal(dPoint1,dPoint2,dPoint3,dNormal);
+    glBegin(GL_TRIANGLES);
+	glNormal3dv(dNormal);
+	glVertex3f(-1,-1,-1);
+	glVertex3f(1,-1,-1);
+	glVertex3f(-1,-1,1);
+	glEnd();
+
+	dPoint1[0]=-1;	 dPoint1[1]=-1;  dPoint1[2]=-1;
+	dPoint2[0]=-1;	 dPoint2[1]=-1; dPoint2[2]=1;
+	dPoint3[0]=-1;	 dPoint3[1]=1; dPoint3[2]=1;
+	CalculateNormal(dPoint1,dPoint2,dPoint3,dNormal);
+	glBegin(GL_QUADS);
+	glNormal3dv(dNormal);
+	glVertex3f(-1,-1,-1);
+	glVertex3f(-1,-1,1);
+	glVertex3f(-1,1,1);
+	glVertex3f(-1,1,-1);	
+	glEnd();
+
+    glFlush();
+}
+
+void TimerFunction(int value)
+{
+    angle+=10;
+	if(angle==360)
+		angle=0;
+
+    glutPostRedisplay();
+	glutTimerFunc(500,TimerFunction, 1);
+}
+
+//在窗口改变大小时调用
+void reshape(int width, int height){
+	glViewport(0, 0, width, height);//设置视口
+	glMatrixMode(GL_PROJECTION);//设置当前为投影变换模式
+	glLoadIdentity();//用单位矩阵替换当前变换矩阵
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);//设置正交投影视图体
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+
+int main(int argc, char** argv)
+{
+	glutInit(&argc, argv);//初始化glut
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);//设置为单缓存，RGB模式
+	glutInitWindowSize(400, 400); //设置窗口大小
+	glutInitWindowPosition(0, 0);//设置窗口起始位置
+	glutCreateWindow("基本图形");//设置窗口标题
+	init();//初始化OpenGL
+	glutDisplayFunc(display);//设置显示回调函数 
+	glutReshapeFunc(reshape);//设置reshape回调函数
+
+	glutTimerFunc(500,TimerFunction, 1);
+	glutMainLoop();//进入主循环
+	return 0;
+}
