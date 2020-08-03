@@ -1,0 +1,158 @@
+#include <gl/glut.h>
+#include<iostream>
+#include<math.h>
+#define Pi 3.1415926
+float angle=0;
+void init(void) 
+{
+	glClearColor(1.0, 1.0, 0.0, 0.0);//设置背景颜色
+	glShadeModel(GL_SMOOTH);//设置明暗处理,有两种选择模式：GL_FLAT（不渐变）和GL_SMOOTH（渐变过渡）
+	GLfloat light_ambient[] = {0.0,0.0,1.0,1.0};
+	GLfloat light_diffuse[]	= {1.0,1.0,1.0,1.0};
+	GLfloat light_specular[]= {1.0,0.0,1.0,0.0};
+	GLfloat light_position[]= {0.0,0.0,1.0,0.0};
+
+	glLightfv(GL_LIGHT0,GL_AMBIENT,light_ambient);
+	glLightfv(GL_LIGHT0,GL_DIFFUSE,light_diffuse);
+	glLightfv(GL_LIGHT0,GL_SPECULAR,light_specular);
+	glLightfv(GL_LIGHT0,GL_POSITION,light_position);
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+}
+void CalculateNormal(GLfloat *dVertex1, 
+			GLfloat *dVertex2, GLfloat *dVertex3, 
+			GLfloat *dNormal)
+{
+	GLdouble dVector1[3],dVector2[3];
+	dVector1[0]=dVertex2[0]-dVertex1[0];
+	dVector1[1]=dVertex2[1]-dVertex1[1];
+	dVector1[2]=dVertex2[2]-dVertex1[2];
+	dVector2[0]=dVertex3[0]-dVertex1[0];
+	dVector2[1]=dVertex3[1]-dVertex1[1];
+	dVector2[2]=dVertex3[2]-dVertex1[2];
+
+	dNormal[0]=dVector1[1]*dVector2[2]-dVector1[2]*dVector2[1];
+	dNormal[1]=dVector1[2]*dVector2[0]-dVector1[0]*dVector2[2];
+	dNormal[2]=dVector1[0]*dVector2[1]-dVector1[1]*dVector2[0];
+
+	double dNormalLength=sqrt(dNormal[0]*dNormal[0]
+			+dNormal[1]*dNormal[1]+dNormal[2]*dNormal[2]);
+	if(dNormalLength!=0.0)
+	{
+		dNormal[0]=dNormal[0]/dNormalLength;
+		dNormal[1]=dNormal[1]/dNormalLength;
+		dNormal[2]=dNormal[2]/dNormalLength;
+	}
+	else
+	{
+		dNormal[0]=0.0;
+		dNormal[1]=0.0;
+		dNormal[2]=1.0;
+	}
+
+}
+void DrawSphere(float r,float M,float N)
+{
+	float step_z = Pi/M;
+	float step_xy = 2*Pi/N;
+	float x[4],y[4],z[4];
+	float angle_z,angle_xy;
+	float v1[3],v2[3],v3[3],v[3];
+
+	for (angle_z=0;angle_z<Pi;angle_z=angle_z+step_z){
+		for(angle_xy=0;angle_xy<2*Pi;angle_xy=angle_xy+step_xy){
+			x[0]=r*sin(angle_z)*cos(angle_xy);
+			y[0]=r*sin(angle_z)*sin(angle_xy);
+			z[0]=r*cos(angle_z);
+
+			x[1]=r*sin(angle_z+step_z)*cos(angle_xy);
+			y[1]=r*sin(angle_z+step_z)*sin(angle_xy);
+			z[1]=r*cos(angle_z+step_z);
+
+			x[2]=r*sin(angle_z+step_z)*cos(angle_xy+step_xy);
+			y[2]=r*sin(angle_z+step_z)*sin(angle_xy+step_xy);
+			z[2]=r*cos(angle_z+step_z);
+
+			x[3]=r*sin(angle_z)*cos(angle_xy+step_xy);
+			y[3]=r*sin(angle_z)*sin(angle_xy+step_xy);
+			z[3]=r*cos(angle_z);
+	
+			v1[0]=x[0],v1[1]=y[0],v1[2]=z[0];
+			v2[0]=x[1],v2[1]=y[1],v2[2]=z[1];
+			v3[0]=x[2],v3[1]=y[2],v3[2]=z[2];
+			CalculateNormal(v1,v2,v3,v);
+			glBegin(GL_TRIANGLES);
+			glNormal3fv(v);
+			glVertex3f(v1[0],v1[1],v1[2]);
+			glVertex3f(v2[0],v2[1],v2[2]);
+			glVertex3f(v3[0],v3[1],v3[2]);
+			glEnd();
+
+			v1[0]=x[0],v1[1]=y[0],v1[2]=z[0];
+			v2[0]=x[2],v2[1]=y[2],v2[2]=z[2];
+			v3[0]=x[3],v3[1]=y[3],v3[2]=z[3];
+			CalculateNormal(v1,v2,v3,v);
+			glBegin(GL_TRIANGLES);
+			glNormal3fv(v);
+			glVertex3f(v1[0],v1[1],v1[2]);
+			glVertex3f(v2[0],v2[1],v2[2]);
+			glVertex3f(v3[0],v3[1],v3[2]);
+			glEnd();
+
+		}
+	}
+}
+void display(void)
+{
+	double dPoint1[3],dPoint2[3],dPoint3[3];
+	double dNormal[3];
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  //清空颜色缓冲区
+	glLoadIdentity();   //清空矩阵
+
+	glEnable(GL_DEPTH_TEST);
+	glRotatef(45,1,0,0);
+	glRotatef(angle,0,1,0);
+	glColor3f(0.0,0.0,1.0);
+	glScaled(0.3,0.3,0.3);
+
+	DrawSphere(2.0,40,40);
+    glFlush();
+}
+
+void TimerFunction(int value)
+{
+    angle+=10;
+	if(angle==360)
+		angle=0;
+
+    glutPostRedisplay();
+	glutTimerFunc(500,TimerFunction, 1);
+}
+
+//在窗口改变大小时调用
+void reshape(int width, int height){
+	glViewport(0, 0, width, height);//设置视口
+	glMatrixMode(GL_PROJECTION);//设置当前为投影变换模式
+	glLoadIdentity();//用单位矩阵替换当前变换矩阵
+	glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);//设置正交投影视图体
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+
+int main(int argc, char** argv)
+{
+	glutInit(&argc, argv);//初始化glut
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);//设置为单缓存，RGB模式
+	glutInitWindowSize(400, 400); //设置窗口大小
+	glutInitWindowPosition(0, 0);//设置窗口起始位置
+	glutCreateWindow("基本图形");//设置窗口标题
+	init();//初始化OpenGL
+	glutDisplayFunc(display);//设置显示回调函数 
+	glutReshapeFunc(reshape);//设置reshape回调函数
+
+	glutTimerFunc(500,TimerFunction, 1);
+	glutMainLoop();//进入主循环
+	return 0;
+}
