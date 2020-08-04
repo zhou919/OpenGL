@@ -19,9 +19,6 @@ void display(void)
 	glLoadIdentity();   //清空矩阵
 	
 	glTranslatef(angle,0,0);//控制整个图形平移
-	if(angle==10){
-		glLoadIdentity();
-	}
 
 	glPushMatrix();//画矩形
 	glTranslatef(0,0,-10);
