@@ -1,0 +1,389 @@
+#include <gl/glut.h>
+#include<iostream>
+#include "math.h"
+#include "windows.h"
+//初始化OpenGL
+float angle=0;
+GLuint textures[4];
+
+BYTE* gltReadBMPBits(const char *szFileName, int *nWidth, int *nHeight)
+	{
+	HANDLE hFileHandle;
+	BITMAPINFO *pBitmapInfo = NULL;
+	unsigned long lInfoSize = 0;
+	unsigned long lBitSize = 0;
+	BYTE *pBits = NULL;					// Bitmaps bits
+	BITMAPFILEHEADER	bitmapHeader;
+	DWORD dwBytes;
+
+	// Open the Bitmap file
+	hFileHandle = CreateFile(szFileName,GENERIC_READ,FILE_SHARE_READ,
+		NULL,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,NULL);
+
+	// Check for open failure (most likely file does not exist).
+	if(hFileHandle == INVALID_HANDLE_VALUE)
+		return NULL;
+
+	// File is Open. Read in bitmap header information
+	ReadFile(hFileHandle,&bitmapHeader,sizeof(BITMAPFILEHEADER),	
+		&dwBytes,NULL);
+
+	// Check for a couple of simple errors	
+	if(dwBytes != sizeof(BITMAPFILEHEADER))
+		return FALSE;
+
+	// Check format of bitmap file
+	if(bitmapHeader.bfType != 'MB')
+		return FALSE;
+
+	// Read in bitmap information structure
+	lInfoSize = bitmapHeader.bfOffBits - sizeof(BITMAPFILEHEADER);
+	pBitmapInfo = (BITMAPINFO *) malloc(sizeof(BYTE)*lInfoSize);
+	ReadFile(hFileHandle,pBitmapInfo,lInfoSize,&dwBytes,NULL);
+
+	if(dwBytes != lInfoSize)
+		{
+        free(pBitmapInfo);
+		CloseHandle(hFileHandle);
+		return FALSE;
+		}
+
+	// Save the size and dimensions of the bitmap
+	*nWidth = pBitmapInfo->bmiHeader.biWidth;
+	*nHeight = pBitmapInfo->bmiHeader.biHeight;
+	lBitSize = pBitmapInfo->bmiHeader.biSizeImage;
+
+	// If the size isn't specified, calculate it anyway	
+	if(pBitmapInfo->bmiHeader.biBitCount != 24)
+		{
+        free(pBitmapInfo);
+		return FALSE;
+		}
+
+	if(lBitSize == 0)
+		lBitSize = (*nWidth *
+           pBitmapInfo->bmiHeader.biBitCount + 7) / 8 *
+  		  abs(*nHeight);
+
+	// Allocate space for the actual bitmap
+	free(pBitmapInfo);
+	pBits =(	BYTE *) malloc(sizeof(BYTE)*lBitSize);
+
+	// Read in the bitmap bits, check for corruption
+	if(!ReadFile(hFileHandle,pBits,lBitSize,&dwBytes,NULL) ||
+			dwBytes != (sizeof(BYTE)*lBitSize))
+		pBits = NULL;
+
+	// Close the bitmap file now that we have all the data we need
+	CloseHandle(hFileHandle);
+
+	return pBits;
+}
+
+void init(void) 
+{
+	glClearColor(1.0f, 1.0f, 0.0f, 0.0f);//设置背景颜色
+	glShadeModel(GL_SMOOTH);//设置明暗处理,有两种选择模式：GL_FLAT（不渐变）和GL_SMOOTH（渐变过渡）
+
+	BYTE *pBytes;
+    int nWidth, nHeight;
+	
+	glGenTextures(4,textures);
+	
+    glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	
+	// Load the texture objects
+	pBytes = gltReadBMPBits("timg.bmp", &nWidth, &nHeight);
+    glBindTexture(GL_TEXTURE_2D, textures[0]);	
+	glTexImage2D(GL_TEXTURE_2D,0,GL_RGB8,nWidth, nHeight, 0,
+		GL_BGR_EXT, GL_UNSIGNED_BYTE, pBytes);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	free(pBytes);
+	
+	pBytes = gltReadBMPBits("timg1.bmp", &nWidth, &nHeight);
+    glBindTexture(GL_TEXTURE_2D, textures[1]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexImage2D(GL_TEXTURE_2D,0,GL_RGB8,nWidth, nHeight, 0,
+		GL_BGR_EXT, GL_UNSIGNED_BYTE, pBytes);
+	free(pBytes);
+	
+	pBytes = gltReadBMPBits("timg2.bmp", &nWidth, &nHeight);
+    glBindTexture(GL_TEXTURE_2D, textures[2]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexImage2D(GL_TEXTURE_2D,0,GL_RGB8,nWidth, nHeight, 0,
+		GL_BGR_EXT, GL_UNSIGNED_BYTE, pBytes);
+	free(pBytes);
+	
+	pBytes = gltReadBMPBits("timg3.bmp", &nWidth, &nHeight);
+    glBindTexture(GL_TEXTURE_2D, textures[3]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexImage2D(GL_TEXTURE_2D,0,GL_RGB8,nWidth, nHeight, 0,
+		GL_BGR_EXT, GL_UNSIGNED_BYTE, pBytes);
+	free(pBytes);
+}
+
+//主要的绘制过程
+void display(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);  //清空颜色缓冲区
+//	glColor3f(1.0,0,0);
+	glEnable(GL_DEPTH_TEST);
+	glLoadIdentity();   //清空矩阵
+	glRotatef(-30,0,1,0);
+	glRotatef(30,1,0,0);
+//	glRotatef(angle,0,1,0);
+//	glColor3f(0.0,0.0,1.0);
+
+	//墙面
+	glPushMatrix();
+	glScaled(0.6,0.6,0.6);
+
+	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	glEnable(GL_TEXTURE_2D);
+	glBegin(GL_QUADS);
+    glTexCoord2f(0,1);	glVertex3f(-1,1,-1);
+	glTexCoord2f(0,0);	glVertex3f(-1,-1,-1);	
+	glTexCoord2f(1,0);	glVertex3f(1,-1,-1);
+	glTexCoord2f(1,1);	glVertex3f(1,1,-1);
+	glEnd();
+
+	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	glEnable(GL_TEXTURE_2D);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0,1);	glVertex3f(-1,1,1);
+	glTexCoord2f(0,0);	glVertex3f(-1,-1,1);	
+	glTexCoord2f(1,0);	glVertex3f(-1,-1,-1);
+	glTexCoord2f(1,1);	glVertex3f(-1,1,-1);
+	glEnd();
+
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	glEnable(GL_TEXTURE_2D);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0,1);	glVertex3f(-1,-1,-1);
+	glTexCoord2f(0,0);	glVertex3f(-1,-1,1);	
+	glTexCoord2f(1,0);	glVertex3f(1,-1,1);
+	glTexCoord2f(1,1);	glVertex3f(1,-1,-1);
+	glEnd();
+
+	glPopMatrix();
+
+	glPushMatrix();//窗户
+
+	glTranslatef(0.3,0.2,-0.4);
+	glBindTexture(GL_TEXTURE_2D, textures[2]);
+	glEnable(GL_TEXTURE_2D);
+	glBegin(GL_QUADS);
+    glTexCoord2f(0,1);	glVertex3f(-0.2,0.2,-0.2);
+	glTexCoord2f(0,0);	glVertex3f(-0.2,-0.2,-0.2);	
+	glTexCoord2f(1,0);	glVertex3f(0.2,-0.2,-0.2);
+	glTexCoord2f(1,1);	glVertex3f(0.2,0.2,-0.2);
+	glEnd();
+
+	glPopMatrix();
+
+	glPushMatrix();//门
+
+	glTranslatef(-0.38,-0.2,0.4);
+	glScalef(0.2,0.4,0.2);
+	glBindTexture(GL_TEXTURE_2D, textures[3]);
+	glEnable(GL_TEXTURE_2D);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0,1);	glVertex3f(-1,1,1);
+	glTexCoord2f(0,0);	glVertex3f(-1,-1,1);	
+	glTexCoord2f(1,0);	glVertex3f(-1,-1,-1);
+	glTexCoord2f(1,1);	glVertex3f(-1,1,-1);
+	glEnd();
+
+	glPopMatrix();
+
+	//桌子
+	glPushMatrix();//桌面
+
+	glTranslatef(0.4,-0.3,-0.45);
+	glScalef(1.2,0.2,1);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+
+	glPushMatrix();//桌腿
+
+	glTranslatef(0.3,-0.46,-0.54);
+	glScalef(0.1,0.9,0.1);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+	
+	glPushMatrix();
+
+	glTranslatef(0.5,-0.46,-0.54);
+	glScalef(0.1,0.9,0.1);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+	
+	glPushMatrix();
+
+	glTranslatef(0.3,-0.46,-0.38);
+	glScalef(0.1,0.9,0.1);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+	
+	glPushMatrix();
+
+	glTranslatef(0.5,-0.46,-0.38);
+	glScalef(0.1,0.9,0.1);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+
+	//椅子
+	glPushMatrix();//椅座
+
+	glTranslatef(0.4,-0.44,-0.21);
+	glScalef(0.5,0.1,0.5);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+
+	glPushMatrix();//椅背
+
+	glTranslatef(0.4,-0.36,-0.14);
+	glScalef(0.6,0.6,0.08);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+
+	glPushMatrix();//椅腿
+
+	glTranslatef(0.44,-0.52,-0.24);
+	glScalef(0.08,0.52,0.08);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+
+	glPushMatrix();
+
+	glTranslatef(0.34,-0.52,-0.24);
+	glScalef(0.08,0.52,0.08);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+
+	glPushMatrix();
+
+	glTranslatef(0.44,-0.52,-0.16);
+	glScalef(0.08,0.52,0.08);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+
+	glPushMatrix();
+
+	glTranslatef(0.34,-0.52,-0.16);
+	glScalef(0.08,0.52,0.08);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+
+	//床
+	glPushMatrix();//床身
+
+	glTranslatef(-0.3,-0.36,-0.42);
+	glScalef(2,0.2,1.2);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+
+	glPushMatrix();//床头
+
+	glTranslatef(-0.58,-0.26,-0.42);
+	glScalef(0.1,0.8,1.2);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+
+	glPushMatrix();//床腿
+
+	glTranslatef(-0.5,-0.49,-0.54);
+	glScalef(0.1,0.7,0.1);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+
+	glPushMatrix();//床腿
+
+	glTranslatef(-0.5,-0.49,-0.32);
+	glScalef(0.1,0.7,0.1);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+
+	glPushMatrix();//床腿
+
+	glTranslatef(-0.12,-0.49,-0.54);
+	glScalef(0.1,0.7,0.1);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+
+	glPushMatrix();//床腿
+
+	glTranslatef(-0.12,-0.49,-0.32);
+	glScalef(0.1,0.7,0.1);
+	glutSolidCube(0.3);
+
+	glPopMatrix();
+
+    glFlush();
+}
+
+void TimerFunction(int value)
+{
+    angle+=10;
+	if(angle==360)
+		angle=0;
+
+
+	// Redraw the scene with new coordinates
+    glutPostRedisplay();
+	glutTimerFunc(500,TimerFunction, 1);
+}
+//在窗口改变大小时调用
+void reshape(int width, int height){
+	glViewport(0, 0, width, height);//设置视口
+    glMatrixMode(GL_PROJECTION);//设置当前为投影变换模式
+    glLoadIdentity();//用单位矩阵替换当前变换矩阵
+    glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);//设置正交投影视图体
+	glMatrixMode (GL_MODELVIEW);
+    glLoadIdentity();
+}
+
+int main(int argc, char** argv)
+{
+	glutInit(&argc, argv);//初始化glut
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);//设置为单缓存，RGB模式
+	glutInitWindowSize(900, 640); //设置窗口大小
+	glutInitWindowPosition(0, 0);//设置窗口起始位置
+	glutCreateWindow("Basic");//设置窗口标题
+	init();//初始化OpenGL
+	glutDisplayFunc(display);//设置显示回调函数 
+	glutReshapeFunc(reshape);//设置reshape回调函数
+
+//	glutTimerFunc(500,TimerFunction, 1);
+	glutMainLoop();//进入主循环
+	return 0;
+}
